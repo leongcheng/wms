@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/main-css"></head>
+<head>
+	<title>部门管理</title>
+</head>
+<body>
+<div id="webApp" class="app-container">
+	<template>
+		<!-- 查询条件 -->
+		<el-form :model="queryParams" ref="queryParams" :inline="true" shiro:hasPermission="sys:dept:list">
+			<el-form-item label="搜索内容" prop="information">
+				<el-input
+						v-model="queryParams.information"
+						@keyup.enter.native="handleQuery"
+						placeholder="请输入内容"
+						clearable
+				/>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
+				<el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+			</el-form-item>
+		</el-form>
+
+		<el-row :gutter="10" class="mb8">
+			<el-col :span="1.5">
+				<el-button
+						type="primary"
+						plain
+						icon="el-icon-plus"
+						size="mini"
+						shiro:hasPermission="sys:dept:save"
+						@click="handleAdd"
+				>新增</el-button>
+			</el-col>
+			<el-col :span="1.5">
+				<el-button
+						type="info"
+						plain
+						icon="el-icon-sort"
+						size="mini"
+						shiro:hasPermission="sys:dept:list"
+						@click="toggleExpandAll"
+				>展开/折叠</el-button>
+			</el-col>
+		</el-row>
+
+		<div class="margin-top"></div>
+
+		<!-- 表格数据 -->
+		<el-table
+				v-if="refreshTable"
+				:data="pageList"
+				row-key="deptId"
+				:default-expand-all="isExpandAll"
+				:tree-props="{children: 'children', hasChildren: 'hasChildren'}"
+				v-loading="loading"
+				border
+				shiro:hasPermission="sys:dept:list"
+				style="width: 100%;">
+			<el-table-column prop="deptName" header-align="center" label="部门名称"></el-table-column>
+			<el-table-column prop="deptCode" align="center" label="部门编号"></el-table-column>
+			<el-table-column prop="leader" align="center" label="负责人"></el-table-column>
+			<el-table-column prop="phone" align="center" label="联系方式"></el-table-column>
+			<el-table-column prop="email" align="center" label="邮箱"></el-table-column>
+			<el-table-column prop="sort" align="center" label="排序"></el-table-column>
+			<el-table-column prop="status" align="center" label="状态">
+				<template slot-scope="scope">
+					<el-tag v-if="scope.row.status === 0" size="small" type="success">正常</el-tag>
+					<el-tag v-else size="small" type="danger">禁用</el-tag>
+				</template>
+			</el-table-column>
+			<el-table-column prop="createTime" align="center" label="创建时间" show-overflow-tooltip="true"></el-table-column>
+			<el-table-column align="center" width="150" label="操作">
+				<template slot-scope="scope">
+					<el-button shiro:hasPermission="sys:dept:update"
+							   type="text"
+							   size="small"
+							   @click="handleUpdate(scope.row)">修改</el-button>
+					<el-button shiro:hasPermission="sys:dept:save"
+							   type="text"
+							   size="small"
+							   @click="handleAdd(scope.row)">新增</el-button>
+					<el-button shiro:hasPermission="sys:dept:delete"
+							   type="text"
+							   size="small"
+							   v-if="scope.row.parentId != 0"
+							   @click="handleDelete(scope.row.deptId)">删除</el-button>
+				</template>
+			</el-table-column>
+		</el-table>
+
+
+		<!-- form表单 -->
+		<el-dialog :title="title"
+				   :visible.sync="showList"
+				   width="600px"
+				   append-to-body>
+			<el-form :model="sysDept" :rules="rules" ref="sysDept" @keyup.enter.native="saveOrUpdate()" label-width="80px">
+				<el-row>
+					<el-col :span="24" v-if="sysDept.parentId != 0">
+						<el-form-item label="上级部门" prop="parentName">
+							<el-popover
+									ref="popover"
+									placement="bottom-start"
+									trigger="click">
+								<el-tree :data="deptList"
+										 :props="defaultProps"
+										 node-key="deptId"
+										 @node-click="menuListTreeCurrentChangeHandle">
+								</el-tree>
+							</el-popover>
+							<el-input v-model="sysDept.parentName" v-popover:popover placeholder="点击选择上级部门"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="部门名称" prop="deptName">
+							<el-input v-model="sysDept.deptName" placeholder="部门名称"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="部门编号" prop="deptCode">
+							<el-input v-model="sysDept.deptCode" placeholder="部门编号"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="负责人" prop="leader">
+							<el-input v-model="sysDept.leader" placeholder="负责人"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="联系方式" prop="phone">
+							<el-input v-model="sysDept.phone" placeholder="联系方式"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="邮箱" prop="email">
+							<el-input v-model="sysDept.email" placeholder="邮箱"></el-input>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="排序号" prop="sort">
+							<el-input-number v-model="sysDept.sort" controls-position="right" :min="0" label="排序号"></el-input-number>
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="状态">
+							<el-radio-group v-model="sysDept.status">
+								<el-radio
+										v-for="item in statusList"
+										:key="item.value"
+										:label="item.value"
+								>{{ item.label }}</el-radio>
+							</el-radio-group>
+						</el-form-item>
+					</el-col>
+				</el-row>
+			</el-form>
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="showList = false">取消</el-button>
+				<el-button type="primary" @click="saveOrUpdate()">确定</el-button>
+			</span>
+		</el-dialog>
+	</template>
+</div>
+
+<div th:replace="common/main-js"></div>
+<script type="text/javascript" th:src="@{/static/js/modules/sys/dept.js?v=1.01}"></script>
+</body>
+</html>

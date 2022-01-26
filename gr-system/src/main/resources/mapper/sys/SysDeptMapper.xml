@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gr.sys.dao.SysDeptDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.gr.sys.entity.SysDeptEntity" id="sysDeptMap">
+        <result property="deptId" column="dept_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="deptCode" column="dept_code"/>
+        <result property="leader" column="leader"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="deleted" column="deleted"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="queryList" resultType="com.gr.sys.entity.SysDeptEntity">
+        select t1.*,(select t2.name from sys_dept t2 where t2.dept_id = t1.parent_id) parentName
+        from sys_dept t1
+        where t1.deleted = 0
+        <if test="sql_filter != null">
+            and ${sql_filter}
+        </if>
+    </select>
+
+    <select id="queryDetpIdList" resultType="long">
+        select dept_id from sys_dept where parent_id = #{value} and del_flag = 0
+    </select>
+
+    <select id="queryDeptCodeList" resultType="long">
+        select sd.dept_code
+        from sys_dept sd
+        where sd.dept_id in (SELECT sud.dept_id FROM sys_user_dept sud WHERE sud.user_id =  #{userId})
+    </select>
+
+</mapper>

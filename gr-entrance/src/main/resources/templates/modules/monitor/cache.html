@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/main-css"></head>
+<head>
+    <title>缓存监控</title>
+</head>
+<body>
+<body class="pear-container">
+<div class="layui-row layui-col-space10" id="webApp">
+    <div class="layui-col-md8">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        命令统计
+                    </div>
+                    <div class="layui-card-body">
+                        <div id="commandstats" style="height: 420px" ></div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        内存信息
+                    </div>
+                    <div class="layui-card-body">
+                        <div id="usedmemory" style="height: 420px" ></div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">访客流量</div>
+                    <div class="layui-card-body">
+                        <div class="layui-tab custom-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                            <div style="background-color:#ffffff;min-height:400px;">
+                                <ve-line
+                                        :data="chartData"
+                                        :legend-visible="false"
+                                        :loading="loading"
+                                        :data-empty="dataEmpty"
+                                        :settings="chartSettings">
+                                </ve-line>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">主机信息</div>
+            <div class="layui-card-body">
+                <table class="layui-table" lay-skin="line">
+                    <thead>
+                    <tr>
+                        <th>属性</th>
+                        <th>值</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Redis版本</td>
+                        <td v-text="cache.info.redis_version"></td>
+                    </tr>
+                    <tr>
+                        <td>运行模式</td>
+                        <td v-text="cache.info.redis_mode == 'standalone' ? '单机' : '集群'"></td>
+                    </tr>
+                    <tr>
+                        <td>端口</td>
+                        <td v-text="cache.info.tcp_port"></td>
+                    </tr>
+                    <tr>
+                        <td>客户端数</td>
+                        <td v-text="cache.info.connected_clients"></td>
+                    </tr>
+                    <tr>
+                        <td>运行时间</td>
+                        <td v-text="cache.info.uptime_in_days"></td>
+                    </tr>
+                    <tr>
+                        <td>使用内存</td>
+                        <td v-text="cache.info.used_memory_human"></td>
+                    </tr>
+                    <tr>
+                        <td>使用CPU</td>
+                        <td v-html="parseFloat(cache.info.used_cpu_user_children).toFixed(2)"></td>
+                    </tr>
+                    <tr>
+                        <td>内存配置</td>
+                        <td v-text="cache.info.maxmemory_human"></td>
+                    </tr>
+                    <tr>
+                        <td>AOF是否开启</td>
+                        <td v-text="cache.info.aof_enabled == '0' ? '否' : '是'"></td>
+                    </tr>
+                    <tr>
+                        <td>RDB是否成功</td>
+                        <td v-text="cache.info.rdb_last_bgsave_status"></td>
+                    </tr>
+                    <tr>
+                        <td>Key数量</td>
+                        <td v-text="cache.dbSize"></td>
+                    </tr>
+                    <tr>
+                        <td>网络入口/出口</td>
+                        <td>{{ cache.info.instantaneous_input_kbps }} kps / {{cache.info.instantaneous_output_kbps }} kps</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/main-js"></div>
+<script type="text/javascript" th:src="@{/static/plugins/echarts/echarts.min.js}"></script>
+<script type="text/javascript">
+    //注册视图组件
+    Vue.component('VeLine', VeLine);
+    var vm = new Vue({
+        el: '#webApp',
+        data: {
+            // 统计命令信息
+            commandstats: null,
+            // 使用内存
+            usedmemory: null,
+            // cache信息
+            cache: {
+                info: {}
+            },
+            chartSettings: {
+                /* xAxisType: 'time',*/
+                area: true,
+                axisSite: { right: ['number'] },
+                labelMap: {'date': '日期', 'number': '访问量'}
+            },
+            chartData: {
+                columns: ['date', 'number'],
+                rows: []
+            },
+            loading: false,
+            dataEmpty: false,
+        },
+        created: function () {
+            this.getCacheInfo();
+        },
+        methods: {
+            /** 查缓存询信息 */
+            getCacheInfo: function() {
+                axios.get('/monitor/cache')
+                    .then(function (res) {
+                        if(res.data.code === 0){
+                            vm.cache = res.data.cacheList;
+                            vm.chartData.rows = res.data.cacheList.signUser;
+                            this.commandstats = echarts.init(document.getElementById('commandstats'), "macarons");
+                            this.commandstats.setOption({
+                                tooltip: {
+                                    trigger: "item",
+                                    formatter: "{a} <br/>{b} : {c} ({d}%)",
+                                },
+                                series: [
+                                    {
+                                        name: "命令",
+                                        type: 'pie',
+                                        radius: '70%',
+                                        data: vm.cache.commandStats,
+                                    },
+                                ],
+                            });
+                            this.usedmemory = echarts.init(document.getElementById("usedmemory"), "macarons");
+                            this.usedmemory.setOption({
+                                series: [
+                                    {
+                                        name: "峰值",
+                                        type: 'gauge',
+                                        axisLine: {
+                                            lineStyle: {
+                                                width: 30,
+                                                color: [
+                                                    [0.3, '#67e0e3'],
+                                                    [0.7, '#37a2da'],
+                                                    [1, '#fd666d']
+                                                ]
+                                            }
+                                        },
+                                        pointer: {
+                                            itemStyle: {
+                                                color: 'auto'
+                                            }
+                                        },
+                                        axisTick: {
+                                            distance: -30,
+                                            length: 8,
+                                            lineStyle: {
+                                                color: '#fff',
+                                                width: 2
+                                            }
+                                        },
+                                        splitLine: {
+                                            distance: -30,
+                                            length: 30,
+                                            lineStyle: {
+                                                color: '#fff',
+                                                width: 4
+                                            }
+                                        },
+                                        axisLabel: {
+                                            color: 'auto',
+                                            distance: 40,
+                                            fontSize: 20
+                                        },
+                                        detail: {
+                                            valueAnimation: true,
+                                            formatter: '{value} M',
+                                            color: 'auto'
+                                        },
+                                        data: [{
+                                            value: parseFloat(vm.cache.info.used_memory_human)
+                                        }]
+                                    },
+                                ],
+                            });
+                        }
+                        else {
+                            vm.$message({
+                                message: res.data.msg,
+                                type: 'warning'
+                            });
+                        }
+                    }).catch(function (err) {
+                    vm.$message.error('请求失败，请稍后再试');
+                });
+            },
+            /** 清除缓存*/
+            clearAll: function() {
+                this.$confirm('您确定要这样操作吗？').then(function (res) {
+                    axios.get('/monitor/clearAll')
+                        .then(function (res) {
+                            if (res.data.code === 0) {
+                                vm.$message({
+                                    type: 'success',
+                                    message: '清理成功'
+                                });
+                            } else {
+                                vm.$message({
+                                    type: 'warning',
+                                    message: res.data.msg
+                                });
+                            }
+                        });
+                })
+            },
+        },
+    });
+</script>
+</body>
+</html>

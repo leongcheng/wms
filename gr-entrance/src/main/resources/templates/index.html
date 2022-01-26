@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('宏川智慧服务平台')"/>
+    <!--element UI-->
+    <link rel="stylesheet" href="static/plugins/element-ui/index.css"/>
+    <link rel="stylesheet" href="static/css/loader.css"/>
+    <link rel="stylesheet" href="static/css/admin.css"/>
+</head>
+<!-- 结 构 代 码 -->
+<body class="layui-layout-body pear-admin">
+<div id="webApp">
+    <!-- 布 局 框 架 -->
+    <div class="layui-layout layui-layout-admin">
+        <!-- 顶 部 样 式 -->
+        <div class="layui-header">
+            <!-- 菜 单 顶 部 -->
+            <div class="layui-logo">
+                <!-- 图 标 -->
+                <img class="logo"></img>
+                <!-- 标 题 -->
+                <span class="title"></span>
+            </div>
+            <!-- 顶 部 左 侧 功 能 -->
+            <ul class="layui-nav layui-layout-left">
+                <li class="collaspe layui-nav-item"><a class="layui-icon layui-icon-shrink-right" href="#"></a></li>
+                <li class="refresh layui-nav-item"><a class="layui-icon layui-icon-refresh-1" href="#" loading=500></a></li>
+            </ul>
+            <!-- 多 系 统 菜 单 -->
+            <div class="layui-layout-control" id="control"></div>
+            <!-- 顶 部 右 侧 菜 单 -->
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item layui-hide-xs"><a class="fullScreen layui-icon layui-icon-screen-full"
+                                                            href="#" title="全屏"></a></li>
+                <li class="layui-nav-item layui-hide-xs"><a class="layui-icon layui-icon-website"
+                                                            href="#" title="官网"></a></li>
+                <li class="layui-nav-item layui-hide-xs"><a class="pear-icon pear-icon-notification"
+                                                            @click="handMessage" title="消息中心"></a></li>
+                <li class="layui-nav-item layui-hide-xs"><a class="pear-icon pear-icon-more"
+                                                            @click="innerVisible = true; feedback={}" title="意见反馈"></a></li>
+                <!--  <li class="layui-nav-item layui-hide-xs message"></li>-->
+                <li class="layui-nav-item user">
+                    <!-- 头 像 -->
+                    <a class="layui-icon layui-icon-username" href="javascript:;"></a>
+                    <!-- 功 能 菜 单 -->
+                    <dl class="layui-nav-child">
+                        <dd><a user-menu-id="5555" user-menu-title="基本资料" user-menu-url="/sys/user/center">基本资料</a></dd>
+                        <dd><a @click="passwordVisible = true">修改密码</a></dd>
+                        <dd><a @click="logout">注销登录</a></dd>
+                        <!--<dd><a class="logout" href="javascript:void(0);">注销登录</a></dd>-->
+                    </dl>
+                </li>
+                <!-- 主 题 配 置 -->
+                <li class="layui-nav-item setting"><a class="layui-icon layui-icon-more-vertical" href="#"></a></li>
+            </ul>
+        </div>
+        <!-- 侧 边 区 域 -->
+        <div class="layui-side layui-bg-black">
+            <!-- 菜 单 顶 部 -->
+            <div class="layui-logo">
+                <!-- 图 标 -->
+                <img class="logo"></img>
+                <!-- 标 题 -->
+                <span class="title"></span>
+            </div>
+            <!-- 菜 单 内 容 -->
+            <div class="layui-side-scroll">
+                <div id="sideMenu"></div>
+            </div>
+        </div>
+        <!-- 视 图 页 面 -->
+        <div class="layui-body">
+            <!-- 内 容 页 面 -->
+            <div id="content"></div>
+        </div>
+        <!-- 遮 盖 层 -->
+        <div class="pear-cover"></div>
+        <!-- 加 载 动 画 -->
+        <div class="loader-main">
+            <!-- 动 画 对 象 -->
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <!-- 移 动 端 便 捷 操 作 -->
+    <div class="pear-collasped-pe collaspe">
+        <a class="layui-icon layui-icon-shrink-right" href="#"></a>
+    </div>
+
+    <!-- 消息中心 -->
+    <el-dialog title="消息中心" :visible.sync="messageVisible">
+        <!-- 外层 Dialog -->
+        <el-container style="height: 500px; border: 1px solid #eee">
+            <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
+                <el-menu
+                        default-active="1"
+                        class="el-menu-vertical-demo"
+                        @select="handleOpen">
+                    <el-menu-item index="1">
+                        <i class="el-icon-message-solid"></i>
+                        <span slot="title">系统公告</span>
+                    </el-menu-item>
+                    <el-menu-item index="2">
+                        <i class="el-icon-s-comment"></i>
+                        <span slot="title">通知消息</span>
+                    </el-menu-item>
+                    <el-menu-item index="3">
+                        <i class="el-icon-warning"></i>
+                        <span slot="title">意见反馈</span>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+
+            <el-container>
+                <el-header style="text-align: right; font-size: 12px">
+                    <el-tabs v-model="activeName" @tab-click="handleClick">
+                        <el-tab-pane label="待处理" name="first"></el-tab-pane>
+                        <el-tab-pane label="全部" name="second"></el-tab-pane>
+                    </el-tabs>
+                </el-header>
+                <el-main>
+                    <el-timeline v-if="pageList.length == 0">
+                        <el-empty :image-size="200"></el-empty>
+                    </el-timeline>
+
+                    <el-timeline v-for="(item, index) in pageList" v-else>
+                        <p>{{ item.creator }} 提交于 {{ item.createTime }}</p>
+                        <br/>
+                        <el-card>
+                            <h2>{{ item.title }}</h2>
+                            <h4>{{ item.content }}</h4>
+                            <br/>
+                            <p>{{ item.creator }} 提交于 {{ item.createTime }}</p>
+                            <el-divider></el-divider>
+                            <el-link type="info" href="#">阅读详情</el-link>
+                            <!--<el-link type="info" :href="item.url" target="_blank">阅读详情</el-link>-->
+                        </el-card>
+                        <br/>
+                    </el-timeline>
+                </el-main>
+            </el-container>
+        </el-container>
+
+        <!-- 意见反馈 -->
+        <el-dialog
+                width="30%"
+                title="意见反馈"
+                :visible.sync="innerVisible"
+                append-to-body>
+            <el-form :model="feedback" ref="feedback" :rules="feedbacks" label-width="80px">
+                <el-form-item label="标题" prop="title">
+                    <el-input v-model="feedback.title" placeholder="请输入标题" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="内容" prop="content">
+                    <el-input type="textarea" v-model="feedback.content" :autosize="{ minRows: 8, maxRows: 12}" maxlength="2000" show-word-limit placeholder="请输入内容" clearable></el-input>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="innerVisible = false">取 消</el-button>
+                <el-button type="primary" @click="onSubmit">确 定</el-button>
+            </div>
+        </el-dialog>
+    </el-dialog>
+
+    <!-- 意见反馈 -->
+    <el-dialog
+            width="30%"
+            title="意见反馈"
+            :visible.sync="innerVisible"
+            append-to-body>
+        <el-form :model="feedback" ref="feedback" :rules="feedbacks" label-width="80px">
+            <el-form-item label="标题" prop="title">
+                <el-input v-model="feedback.title" placeholder="请输入标题" clearable></el-input>
+            </el-form-item>
+           <!-- <el-form-item label="邮箱" prop="email">
+                <el-input v-model="feedback.email" placeholder="请输入邮箱" clearable></el-input>
+            </el-form-item>-->
+            <el-form-item label="内容" prop="content">
+                <el-input type="textarea" v-model="feedback.content" :autosize="{ minRows: 8, maxRows: 12}" maxlength="2000" show-word-limit placeholder="请输入内容" clearable></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="innerVisible = false">取 消</el-button>
+            <el-button type="primary" @click="onSubmit">发布</el-button>
+        </div>
+    </el-dialog>
+
+    <!-- 密码修改 -->
+    <el-dialog
+            width="30%"
+            title="密码修改"
+            :visible.sync="passwordVisible"
+            append-to-body>
+        <el-form :model="loginUser" :rules="rules" ref="loginUser" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="原密码" prop="password">
+                <el-input type="password" v-model="loginUser.password"></el-input>
+            </el-form-item>
+            <el-form-item label="新密码" prop="newPassword">
+                <el-input type="password" v-model="loginUser.newPassword"></el-input>
+            </el-form-item>
+            <el-form-item label="确认密码" prop="checkPass">
+                <el-input type="password" v-model="loginUser.checkPass"></el-input>
+            </el-form-item>
+            <el-form-item label="年龄" prop="age">
+                <el-input v-model.number="loginUser.age"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="passwordVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updatePassWord">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<!-- 依 赖 脚 本 -->
+<th:block th:include="include :: footer"/>
+<script type="text/javascript" th:src="@{/static/js/index.js?v=1.01}"></script>
+</body>
+</html>

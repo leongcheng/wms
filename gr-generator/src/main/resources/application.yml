@@ -1,0 +1,34 @@
+##此代码生成器使用的架构技术包括：spring boot + mybatis-plus + thymeleaf + shiro + mysql + bootstrap + vue + jquery
+
+# Tomcat
+server:
+  port: 8086
+  servlet:
+    context-path: /
+
+# mysql
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/gr_wms?useUnicode=true&characterEncoding=UTF-8&useSSL=true
+    username: root
+    password: root
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+  resources:
+    static-locations: classpath:/static/,classpath:/views/
+
+# Mybatis配置
+mybatis:
+  mapperLocations: classpath:mapper/**/*.xml
+
+pagehelper:
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
+#指定数据库，可选值有【mysql、oracle、sqlserver、postgresql】
+gr:
+  database: mysql

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/main-css"></head>
+<head>
+	<title>岗位管理</title>
+</head>
+<body>
+<div id="webApp" class="app-container">
+	<template>
+		<!-- 查询条件 -->
+		<el-form :model="queryParams" ref="queryParams" :inline="true">
+			<el-form-item label="搜索内容" prop="information">
+				<el-input
+						v-model="queryParams.information"
+						@keyup.enter.native="handleQuery"
+						placeholder="请输入内容"
+						clearable
+				/>
+			</el-form-item>
+			<el-form-item label="状态">
+				<el-select v-model="queryParams.status" placeholder="请选择状态">
+					<el-option label="全部" value=" "></el-option>
+					<el-option label="成功" value="0"></el-option>
+					<el-option label="失败" value="1"></el-option>
+				</el-select>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
+				<el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+			</el-form-item>
+		</el-form>
+
+		<el-row :gutter="10" class="mb8">
+			<el-col :span="1.5">
+				<el-button
+						type="primary"
+						plain
+						icon="el-icon-plus"
+						size="mini"
+						shiro:hasPermission="sys:post:save"
+						@click="handleAdd"
+				>新增</el-button>
+			</el-col>
+			<el-col :span="1.5">
+				<el-button
+						type="success"
+						plain
+						icon="el-icon-edit"
+						size="mini"
+						:disabled="single"
+						shiro:hasPermission="sys:post:update"
+						@click="handleUpdate"
+				>修改</el-button>
+			</el-col>
+			<el-col :span="1.5">
+				<el-button
+						type="danger"
+						plain
+						icon="el-icon-delete"
+						size="mini"
+						:disabled="multiple"
+						shiro:hasPermission="sys:post:delete"
+						@click="handleDelete"
+				>删除</el-button>
+			</el-col>
+			<el-col :span="1.5">
+				<el-button
+						type="warning"
+						plain
+						icon="el-icon-download"
+						size="mini"
+						shiro:hasPermission="sys:post:export"
+						@click="handleExport"
+				>导出</el-button>
+			</el-col>
+			<right-toolbar :showSearch.sync="showSearch" @queryTable="getPageList"></right-toolbar>
+		</el-row>
+
+		<div class="margin-top"></div>
+
+		<!-- 表格数据 -->
+		<el-table ref="tables"
+				  :data="pageList"
+				  @selection-change="handleSelectionChange"
+				  :default-sort="defaultSort"
+				  @sort-change="handleSortChange"
+				  v-loading="loading"
+				  border
+				  shiro:hasPermission="sys:post:list"
+				  style="width: 100%;">
+			<el-table-column fixed type="index" align="center" label="序号" width="60"></el-table-column>
+			<el-table-column fixed type="selection" align="center" width="55"></el-table-column>
+			<el-table-column prop="postName" align="center" label="岗位名称" show-overflow-tooltip></el-table-column>
+			<el-table-column prop="postCode" align="center" label="岗位编号"></el-table-column>
+			<el-table-column prop="creator" align="center" label="创建人"></el-table-column>
+			<el-table-column prop="status" align="center" label="状态">
+				<template slot-scope="scope">
+					<el-tag v-if="scope.row.status === 0" size="small" type="success">正常</el-tag>
+					<el-tag v-else size="small" type="danger">禁用</el-tag>
+				</template>
+			</el-table-column>
+			<el-table-column prop="updateTime" align="center" label="更新时间" width="180"></el-table-column>
+			<el-table-column label="操作" fixed="right" align="center" width="150">
+				<template slot-scope="scope" v-if="scope.row.postId != 1">
+					<el-button
+							size="mini"
+							shiro:hasPermission="sys:post:update"
+							@click="handleUpdate(scope.row)">修改</el-button>
+					<el-button
+							size="mini"
+							type="danger"
+							shiro:hasPermission="sys:post:delete"
+							@click="handleDelete(scope.row)">删除</el-button>
+				</template>
+			</el-table-column>
+		</el-table>
+
+		<!-- 分页插件 -->
+		<div class="block" style="margin-top: 15px;" >
+			<el-pagination
+					align='right'
+					background
+					@size-change="handleSizeChange"
+					@current-change="handleCurrentChange"
+					:current-page="queryParams.currentPage"
+					:page-size="queryParams.pageSize"
+					:page-sizes="[10, 20, 30, 50]"
+					layout="total, sizes, prev, pager, next, jumper"
+					v-show="queryParams.totalCount>0"
+					:total="queryParams.totalCount">
+			</el-pagination>
+		</div>
+
+		<!-- form表单 -->
+		<el-dialog :title="title" :visible.sync="showList" width="500px" append-to-body>
+			<el-form ref="sysPost" :model="sysPost" :rules="rules" label-width="80px">
+				<el-form-item label="岗位名称" prop="postName">
+					<el-input v-model="sysPost.postName" placeholder="请输入岗位名称" clearable/>
+				</el-form-item>
+				<el-form-item label="岗位编码" prop="postCode">
+					<el-input v-model="sysPost.postCode" placeholder="请输入编码名称" clearable/>
+				</el-form-item>
+				<el-form-item label="岗位顺序" prop="postSort">
+					<el-input-number v-model="sysPost.postSort" controls-position="right" :min="0" />
+				</el-form-item>
+				<el-form-item label="岗位状态" prop="status">
+					<el-radio-group v-model="sysPost.status">
+						<el-radio
+								v-for="item in statusList"
+								:key="item.value"
+								:label="item.value"
+						>{{ item.label }}</el-radio>
+					</el-radio-group>
+				</el-form-item>
+				<el-form-item label="备注" prop="remark">
+					<el-input v-model="sysPost.remark" type="textarea" placeholder="请输入内容" clearable/>
+				</el-form-item>
+			</el-form>
+			<div slot="footer" class="dialog-footer">
+				<el-button type="primary" @click="saveOrUpdate">确 定</el-button>
+				<el-button @click="reload">取 消</el-button>
+			</div>
+		</el-dialog>
+	</template>
+</div>
+
+<div th:replace="common/main-js"></div>
+<script type="text/javascript" th:src="@{/static/js/modules/sys/post.js?v=1.01}"></script>
+</body>
+</html>

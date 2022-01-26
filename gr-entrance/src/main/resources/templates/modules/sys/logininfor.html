@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="common/main-css"></head>
+<head>
+	<title>登录日志</title>
+</head>
+<body>
+<div id="webApp" class="app-container">
+	<template>
+		<!-- 查询条件 -->
+		<el-form :model="queryParams" ref="queryParams" :inline="true" shiro:hasPermission="sys:logininfor:list">
+			<el-form-item label="搜索内容" prop="information">
+				<el-input
+						v-model="queryParams.information"
+						@keyup.enter.native="handleQuery"
+						placeholder="请输入内容"
+						clearable
+				/>
+			</el-form-item>
+			<el-form-item label="用户名">
+				<el-input
+						v-model="queryParams.username"
+						@keyup.enter.native="handleQuery"
+						placeholder="请输入用户名"
+						clearable
+				/>
+			</el-form-item>
+			<el-form-item label="状态">
+				<el-select v-model="queryParams.status" @change="handleQuery" placeholder="请选择状态">
+					<el-option label="全部" value=" "></el-option>
+					<el-option label="成功" value="0"></el-option>
+					<el-option label="失败" value="1"></el-option>
+				</el-select>
+			</el-form-item>
+		</el-form>
+
+		<el-form :model="queryParams" ref="queryParams" :inline="true" shiro:hasPermission="sys:logininfor:list">
+			<el-form-item label="选择日期">
+				<el-date-picker
+						v-model="dateRange"
+						style="width: 220px"
+						type="daterange"
+						value-format="yyyy-MM-dd"
+						align="right"
+						unlink-panels
+						range-separator="至"
+						start-placeholder="开始日期"
+						end-placeholder="结束日期"
+						:picker-options="pickerOptions"
+						@change="handleQuery">
+				</el-date-picker>
+			</el-form-item>
+			<el-form-item>
+				<el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
+				<el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+			</el-form-item>
+		</el-form>
+
+		<!-- 表格数据 -->
+		<el-table ref="tables"
+				  :data="pageList"
+				  :default-sort="defaultSort"
+				  @sort-change="handleSortChange"
+				  v-loading="loading"
+				  border
+				  shiro:hasPermission="sys:logininfor:list"
+				  style="width: 100%;">
+			<el-table-column fixed type="index" align="center" label="序号" width="60"></el-table-column>
+			<el-table-column fixed prop="username" align="center" label="用户名" width="200" :show-overflow-tooltip="true"></el-table-column>
+			<el-table-column prop="account" align="center" label="登录账号" width="130" :show-overflow-tooltip="true"></el-table-column>
+			<el-table-column prop="ipaddr" align="center" label="登录IP"></el-table-column>
+			<el-table-column prop="location" align="center" label="登录地点"></el-table-column>
+			<el-table-column prop="browser" align="center" label="浏览器" width="150"></el-table-column>
+			<el-table-column prop="os" align="center" label="操作系统"></el-table-column>
+			<el-table-column prop="status" align="center" label="状态" width="100">
+				<template slot-scope="scope">
+					<el-tag v-if="scope.row.status === 0" size="small" type="success">正常</el-tag>
+					<el-tag v-else size="small" type="danger">失败</el-tag>
+				</template>
+			</el-table-column>
+			<el-table-column prop="message" align="center" label="操作信息" :show-overflow-tooltip="true"></el-table-column>
+			<el-table-column prop="createTime" align="center" label="创建时间" width="180"></el-table-column>
+		</el-table>
+
+		<!-- 分页插件 -->
+		<div class="block" style="margin-top: 15px;" >
+			<el-pagination
+					align='right'
+					background
+					@size-change="handleSizeChange"
+					@current-change="handleCurrentChange"
+					:current-page="queryParams.currentPage"
+					:page-size="queryParams.pageSize"
+					:page-sizes="[10, 20, 30, 50]"
+					layout="total, sizes, prev, pager, next, jumper"
+					v-show="queryParams.totalCount>0"
+					:total="queryParams.totalCount">
+			</el-pagination>
+		</div>
+	</template>
+</div>
+
+<div th:replace="common/main-js"></div>
+<script type="text/javascript" th:src="@{/static/js/modules/sys/logininfor.js?v=1.01}"></script>
+</body>
+</html>

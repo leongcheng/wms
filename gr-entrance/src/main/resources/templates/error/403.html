@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/main-css"></head>
+<head>
+    <link type="text/css" rel="stylesheet" th:href="@{/static/css/other/error.css}">
+</head>
+<body>
+<div class="content">
+    <img src="../../static/images/403.svg" alt="">
+    <div class="content-r">
+        <h1>403</h1>
+        <p>抱歉，你无权访问该页面</p>
+        <button class="pear-btn pear-btn-primary">返回首页</button>
+    </div>
+</div>
+<div th:replace="common/main-js"></div>
+</body>
+</html>

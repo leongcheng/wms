@@ -1,0 +1,26 @@
+<!-- 通用 css -->
+<head th:fragment=header(title)>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+    <title th:text="${title}"></title>
+    <link rel="stylesheet" th:href="@{/static/component/pear/css/pear.css}">
+</head>
+
+<!-- 通用 JavaScript -->
+<div th:fragment="footer">
+    <script th:src="@{/static/component/layui/layui.js}"></script>
+    <script th:src="@{/static/component/pear/pear.js}"></script>
+    <script th:src="@{/static/plugins/jquery/jquery-3.4.1.min.js}"></script>
+    <script th:src="@{/static/plugins/vue/vue.min.js}"></script>
+    <script th:src="@{/static/plugins/element-ui/index.js}"></script>
+    <script th:src="@{/static/plugins/axios/axios.min.js}"></script>
+    <script th:src="@{/static/plugins/axios/qs.js}"></script>
+    <script th:src="@{/static/plugins/echarts/echarts.min.js}"></script>
+    <script th:src="@{/static/plugins/echarts/line.min.js}"></script>
+    <script th:src="@{/static/plugins/echarts/line.min.js}"></script>
+    <script th:src="@{/static/plugins/utils/httpUtils.js}"></script>
+</div>
+

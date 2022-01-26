@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/main-css"></head>
+<head>
+    <title>更新日志</title>
+</head>
+<body>
+<div id="webApp" class="app-container">
+    <template>
+        <el-row :gutter="20">
+            <el-col :sm="24" :lg="24">
+                <blockquote class="text-warning" style="font-size: 14px">
+                    宏川智慧仓储服务平台
+                    <br />
+                    <el-link
+                            href="http://ca.grsl.cn"
+                            type="primary"
+                            target="_blank"
+                    >http://ca.grsl.cn</el-link
+                    >
+                    <br />
+                    宏川智慧物流服务平台
+                    <br />
+                    <el-link
+                            href="https://kd.grsl.cn:8086"
+                            type="primary"
+                            target="_blank"
+                    >https://kd.grsl.cn:8086</el-link
+                    >
+                    <br />
+                    OA开发申请流程
+                    <el-link href="http://oa.grgroup.cc:8090" type="primary" target="_blank"
+                    >>☛☛点我进入☚☚</el-link
+                    ><br />
+                    <h4 class="text-danger">
+                        技术支持：宏川科创
+                    </h4>
+                </blockquote>
+                <hr />
+            </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+            <el-col :sm="24" :lg="12" style="padding-left: 20px">
+                <h3>宏川智慧仓储服务平台</h3>
+                <br />
+                <p>
+                    智慧仓储是一个企业级Java EE开发平台，采用SpringBoot、Shiro、Mybatis Plus框架，Vue做前后端交互，集成CFCA第三方数字证书开发的一套货权交易系统
+                </p>
+                <p>
+                    <b>当前版本:</b> <span>v{{ version }}</span>
+                </p>
+            </el-col>
+
+            <el-col :sm="24" :lg="12" style="padding-left: 50px">
+                <el-row>
+                    <el-col :span="12">
+                        <h3>技术选型</h3>
+                    </el-col>
+                </el-row>
+                <br />
+                <el-row>
+                    <el-col :span="6">
+                        <h5>后端技术</h5>
+                        <ul>
+                            <li>SpringBoot</li>
+                            <li>MyBatis Plus</li>
+                            <li>Shiro</li>
+                            <li>Druid</li>
+                            <li>RabbitMQ</li>
+                            <li>Redis</li>
+                            <li>...</li>
+                        </ul>
+                    </el-col>
+                    <el-col :span="6">
+                        <h5>前端技术</h5>
+                        <ul>
+                            <li>Vue</li>
+                            <li>Element-ui</li>
+                            <li>Axios</li>
+                            <li>Layui</li>
+                            <li>Echarts</li>
+                            <li>Jquery</li>
+                            <li>...</li>
+                        </ul>
+                    </el-col>
+                </el-row>
+            </el-col>
+        </el-row>
+
+        <el-divider></el-divider>
+
+        <el-row :gutter="20">
+            <el-col :xs="24" :sm="24" :md="12" :lg="8">
+                <el-card class="update-log">
+                    <div slot="header" class="clearfix">
+                        <span>联系信息</span>
+                    </div>
+                    <div class="body">
+                        <p>
+                            <i class="el-icon-phone"></i> 项目负责人：<span style="color: #66b1ff">13926529953 梁成</span>
+                        </p>
+                    </div>
+                </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="8">
+                <el-card class="update-log">
+                    <div slot="header" class="clearfix">
+                        <span>更新日志</span>
+                    </div>
+                    <el-collapse accordion>
+                        <el-collapse-item title="v1.0.0 - 2022-01-01">
+                            <ol>
+                                <li>宏川智慧仓储服务平台正式发布</li>
+                            </ol>
+                        </el-collapse-item>
+                    </el-collapse>
+                </el-card>
+            </el-col>
+
+            <el-col :xs="24" :sm="24" :md="12" :lg="8">
+                <el-card class="update-log">
+                    <div slot="header" class="clearfix">
+                        <span>微信小程序</span>
+                    </div>
+                    <div class="body">
+                        <img src="${request.contextPath}/static/images/ewm.jpg" alt="donate" width="100%"/>
+                        <span style="display: inline-block; height: 30px; line-height: 30px"></span
+                        >
+                    </div>
+                </el-card>
+            </el-col>
+        </el-row>
+    </template>
+</div>
+<div th:replace="common/main-js"></div>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#webApp',
+        data: {
+            q: {},
+            version: '1.0.0'
+        },
+        created: function () {
+
+        },
+        methods: {
+
+        }
+    });
+</script>
+</body>
+</html>

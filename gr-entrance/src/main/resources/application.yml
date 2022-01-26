@@ -1,0 +1,75 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  shutdown: graceful
+
+spring:
+  # 环境 test|dev|prod
+  profiles:
+    active: test
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 100MB     # 最大支持文件大小
+      max-request-size: 100MB  # 最大支持请求大小
+  thymeleaf:
+    enabled: true
+    encoding: utf-8
+    prefix: classpath:/templates/
+    cache: false
+    mode: HTML
+    suffix: .html
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+
+# mybatis-plus
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/*/*.xml
+  #实体扫描，多个package用逗号或者分号分隔
+#  typeAliasesPackage: com.gr.*.entity
+  global-config:
+    # 关闭MP3.0自带的banner
+    banner: false
+    db-config:
+      #主键类型  0:"数据库ID自增",1:"该类型为未设置主键类型", 2:"用户输入ID",3:"全局唯一ID (数字类型唯一ID)", 4:"全局唯一ID UUID",5:"字符串全局唯一ID (idWorker 的字符串表示)";
+      id-type: auto
+      # 默认数据库表下划线命名
+      table-underline: true
+  configuration:
+    # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
+    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 返回类型为Map,显示null对应的字段
+    call-setters-on-nulls: true
+
+# 加密key
+jasypt:
+  encryptor:
+    password: 4EyN0xDLbnP2lsaayjl8fbIctj5bVIdC
+
+# 防止XSS攻击
+xss:
+  # 过滤开关
+  enabled: true
+  # 排除链接（多个用逗号分隔）
+  excludes: /sys/notice/*
+  # 匹配链接
+  urlPatterns: /sys/**,/monitor/**
+
+# 自定义配置
+fast:
+  # 验证码类型 math 数组计算 char 字符验证
+  captchaType: math
+  # 接口幂等间隔时间，单位:秒
+  repeat:
+    intervalTime: 5
+  upload:
+    allowTypes:
+      - image/webp
+      - image/jpeg
+      - image/jpg
+      - image/png
+      - image/bmp
+      - image/jfif

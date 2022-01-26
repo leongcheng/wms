@@ -1,0 +1,201 @@
+var vm = new Vue({
+	el: '#webApp',
+	data: {
+		// 显示修改
+		showList: false,
+		// 遮罩层
+		loading: true,
+		// 选中数组
+		ids: [],
+		// 非单个禁用
+		single: true,
+		// 非多个禁用
+		multiple: true,
+		// 显示搜索条件
+		showSearch: true,
+		// 表格数据
+		pageList: [],
+		// 默认排序
+		defaultSort: {prop: 'createTime', order: 'create_time'},
+		// 查询参数
+		queryParams: {
+			page: 1,
+			pageSize: 10,
+			totalCount: 0,
+			information: null,
+			startDate: null,
+			endDate: null,
+		},
+		title: '',
+		${classname}: {},
+
+		// 表单校验
+		rules: {
+	#foreach($column in $columns)
+		#if($column.columnName != $pk.columnName)
+			${column.attrname}: [
+				{ required: true, message: "${column.comments}不能为空", trigger: "blur" }
+			],
+		#end
+	#end
+		}
+	},
+	created: function () {
+		this.getPageList(1);
+	},
+	computed: {
+
+	},
+	methods : {
+		/** 多选框选中数据 */
+		handleSelectionChange(selection) {
+			this.ids = selection.map(item => item.${pk.attrname});
+			this.single = selection.length != 1;
+			this.multiple = !selection.length;
+		},
+		/** 排序触发事件 */
+		handleSortChange(column, prop, order) {
+			//this.queryParams.order = column.prop;
+			//this.queryParams.isAsc = column.order;
+			//this.getPageList();
+		},
+		/** 每页 ${val} 条 */
+		handleSizeChange(val) {
+			//console.log(`每页 ${val} 条`);
+			this.queryParams.limit = val;
+			this.getPageList(this.queryParams.page);
+		},
+		/** 当前页: ${val} */
+		handleCurrentChange(val) {
+			//console.log(`当前页 ${val} 条`);
+			this.queryParams.page = val;
+			this.getPageList(this.queryParams.page);
+		},
+		handleQuery: function () {
+			vm.queryParams.startDate = vm.dateRange != null ? vm.dateRange[0] : null;
+			vm.queryParams.endDate = vm.dateRange != null ? vm.dateRange[1] : null;
+			vm.getPageList(1);
+		},
+		getPageList: function (page) {
+			this.pageList = [];
+			this.loading = true;
+			this.queryParams.page = page;
+			axios.get("/${moduleName}/${pathName}/list", {
+				params: {
+					...this.queryParams
+				}
+			}).then(function (res) {
+				vm.loading = false;
+				vm.pageList = res.data.page.list;
+				vm.queryParams.pageSize = res.data.page.pageSize;
+				vm.queryParams.totalCount = res.data.page.totalCount;
+				vm.queryParams.currentPage = res.data.page.currentPage;
+			}).catch(function (err) {
+				vm.$message.error('请求失败，请稍后再试');
+			});
+		},
+		/** 新增 */
+		handleAdd(row) {
+			vm.title = "添加${comments}";
+			vm.showList = true;
+			vm.${classname} = {};
+		},
+		/** 修改 */
+		handleUpdate(row) {
+			const $pk.attrname = row.$pk.attrname || this.ids;
+			if($pk.attrname == null){
+				return;
+			}
+			vm.title = "修改${comments}";
+			vm.showList = true;
+			vm.${classname} = {};
+
+			vm.getInfo(${pk.attrname});
+		},
+		//表单提交
+		saveOrUpdate(){
+			this.$refs.${classname}.validate((valid) => {
+				if (valid) {
+					this.openFullScreen();
+					let url = vm.${classname}.${pk.attrname} == null ? "/${moduleName}/${pathName}/save" : "/${moduleName}/${pathName}/update";
+					axios.post(url, vm.${classname}).then(function (res) {
+						vm.loading.close();
+						if(res.data.code === 0){
+							layer.msg('操作成功', {icon: 1});
+							vm.reload();
+						}else {
+							layer.msg(res.data.msg, {icon: 0});
+						}
+					});
+				}
+			});
+		},
+		/** 删除 */
+		handleDelete(row) {
+			const ${pk.attrname}s = row.${pk.attrname} == undefined ? this.ids : [row.${pk.attrname}];
+			if(${pk.attrname}s.length === 0 || ${pk.attrname} == undefined){
+				return;
+			}
+			this.$confirm('此操作将永久删除该记录, 是否继续?', '系统提示', { type: 'warning' }).then(() => {
+				this.openFullScreen();
+				axios.post('/${moduleName}/${pathName}/delete', ${pk.attrname}s).then(function (res) {
+					vm.loading.close();
+					if(res.data.code === 0){
+						layer.msg('操作成功', {icon: 1});
+						vm.reload();
+					}else {
+						layer.msg(res.data.msg, {icon: 0});
+					}
+				});
+			}).catch(() => {});
+		},
+		/** 导出 */
+		handleExport: function () {
+			this.openFullScreen();
+			axios({
+				method: 'POST',
+				responseType: 'blob',
+				data: Qs.stringify(vm.queryParams),
+				url: "/${moduleName}/${pathName}/export"
+			}).then(function (res) {
+				vm.loading.close();
+				var fileName = decodeURIComponent(res.headers["content-disposition"].split(";")[1].split("=")[1]);
+				if ('download' in document.createElement('a')) {
+					var url = window.URL.createObjectURL(res.data);
+					var link = document.createElement("a");
+					document.body.appendChild(link);
+					link.href = url;
+					link.download = fileName;
+					link.click();
+					window.URL.revokeObjectURL(url);// 释放URL 对象
+					document.body.removeChild(link);
+				} else {//兼容IE10+下载
+					var blob = new Blob([res.data]);
+					navigator.msSaveOrOpenBlob(blob, fileName);
+				}
+			}).catch(function (error) {
+				vm.$message.error('文件下载失败，请稍后再试');
+			});
+		},
+		getInfo: function (${pk.attrname}) {
+			axios.get("/${moduleName}/${pathName}/info/" + ${pk.attrname}).then(function (res) {
+				vm.${classname} = res.data.${classname}
+			});
+		},
+		openFullScreen: function() {
+			this.loading = this.$loading({
+				lock: true,
+				text: "正在处理...",
+				spinner: 'el-icon-loading',
+				background: 'rgba(0, 0, 0, 0.7)'
+			});
+		},
+		reload: function (event) {
+			vm.showList = false;
+			vm.getPageList(1);
+		},
+		resetQuery: function () {
+			window.location.reload();
+		},
+	}
+});

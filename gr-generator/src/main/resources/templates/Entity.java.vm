@@ -1,0 +1,45 @@
+package ${package}.${moduleName}.entity;
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+	#if(${hasBigDecimal})
+	import java.math.BigDecimal;
+	#end
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * ${comments}
+ *
+ * @author ${author}
+ * @date ${datetime}
+ */
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(chain = true)
+@TableName("${tableName}")
+@ApiModel(value="${tableName}对象", description="${comments}")
+public class ${className}Entity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	#foreach ($column in $columns)
+	/**
+	 * $column.comments
+	 */
+	#if($column.columnName == $pk.columnName)
+	@TableId
+	#end
+	@Excel(name = "$column.comments", width = 15)
+	@NotBlank(message = "$column.comments不能为空", groups = {AddGroup.class, UpdateGroup.class})
+	@ApiModelProperty(value = "$column.comments")
+	private $column.attrType $column.attrname;
+	#end
+
+}

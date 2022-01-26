@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gr.sys.dao.SysMenuDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.gr.sys.entity.SysMenuEntity" id="sysMenuMap">
+        <result property="menuId" column="menu_id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="type" column="type"/>
+        <result property="openType" column="open_type"/>
+        <result property="title" column="title"/>
+        <result property="url" column="url"/>
+        <result property="params" column="params"/>
+        <result property="icon" column="icon"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="pageType" column="page_type"/>
+        <result property="remark" column="remark"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="getMenuIdListByUserId" resultType="long">
+        select distinct rm.menu_id from sys_user_role ur
+         LEFT JOIN sys_role_menu rm on ur.role_id = rm.role_id
+        where ur.user_id = #{userId}
+    </select>
+
+    <!-- 根据用户id及父节点，获取相应子节点菜单信息 -->
+    <select id="getMenuListByParentIdAndUserId" resultType="com.gr.sys.entity.SysMenuEntity">
+        select distinct m.* from sys_user_role ur
+         LEFT JOIN sys_role_menu rm on ur.role_id = rm.role_id
+         LEFT JOIN sys_menu m on rm.menu_id = m.menu_id
+        where ur.user_id = #{userId} and m.parent_id = #{parentId}
+          and m.page_type != '1' and m.status = 0
+        order by sort asc
+    </select>
+
+    <!-- 根据用户id获取菜单信息 -->
+    <select id="getMenuListByUserId" resultType="com.gr.sys.entity.SysMenuEntity">
+        select distinct m.* from sys_user_role ur
+         LEFT JOIN sys_role_menu rm on ur.role_id = rm.role_id
+         LEFT JOIN sys_menu m on rm.menu_id = m.menu_id
+        where m.page_type != #{pageType} and m.status = 0
+        <if test="userId != 1">
+            and ur.user_id = #{userId}
+        </if>
+        order by sort asc
+    </select>
+
+    <!-- 根据角色id获取菜单信息 -->
+    <select id="getMenuListByRoleId" resultType="Long">
+        select m.menu_id
+        from sys_menu m
+        left join sys_role_menu rm on m.menu_id = rm.menu_id
+        where rm.role_id = #{roleId}
+        order by m.parent_id, m.sort
+    </select>
+
+</mapper>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="common/main-css"></head>
+<head>
+    <link type="text/css" rel="stylesheet" th:href="@{/static/css/other/server.css}">
+    <title>系统监控</title>
+</head>
+<body class="pear-container">
+<div class="layui-row layui-col-space10" id="webApp">
+    <div class="layui-col-md8">
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        主机信息
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="layui-row layui-col-space10">
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">核心数</div>
+                                    <div class="count pear-text" v-text="server.cpuEntity.cpuNum"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">系统使用率</div>
+                                    <div class="count pear-text"  v-text="server.cpuEntity.used + '%'"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">当前空闲率</div>
+                                    <div class="count pear-text" v-text="server.cpuEntity.free + '%'"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">用户使用率</div>
+                                    <div class="count pear-text" v-text="server.cpuEntity.sys + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        内存监控
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="layui-row layui-col-space10">
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">空闲内存</div>
+                                    <div class="count pear-text" v-text="server.memEntity.free + 'G'"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">最大内存</div>
+                                    <div class="count pear-text" v-text="server.memEntity.total + 'G'"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">已用内存</div>
+                                    <div class="count pear-text" v-text="server.memEntity.used + 'G'"></div>
+                                </div>
+                            </div>
+                            <div class="layui-col-md6 layui-col-sm6 layui-col-xs6">
+                                <div class="pear-card2">
+                                    <div class="title">内存使用</div>
+                                    <div class="count pear-text" v-text="server.memEntity.usage + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">访客流量</div>
+                    <div class="layui-card-body">
+                        <div class="layui-tab custom-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                            <div style="background-color:#ffffff;min-height:400px;">
+                                <ve-line
+                                        :data="chartData"
+                                        :legend-visible="false"
+                                        :loading="loading"
+                                        :data-empty="dataEmpty"
+                                        :settings="chartSettings">
+                                </ve-line>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md4">
+        <div class="layui-card">
+            <div class="layui-card-header">主机信息</div>
+            <div class="layui-card-body">
+                <table class="layui-table" lay-skin="line">
+                    <thead>
+                    <tr>
+                        <th>属性</th>
+                        <th>值</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>名称</td>
+                        <td v-text="server.systemEntity.computerName"></td>
+                    </tr>
+                    <tr>
+                        <td>地址</td>
+                        <td v-text="server.systemEntity.computerIp"></td>
+                    </tr>
+                    <tr>
+                        <td>系统</td>
+                        <td v-text="server.systemEntity.osName"></td>
+                    </tr>
+                    <tr>
+                        <td>模型</td>
+                        <td v-text="server.systemEntity.osArch"></td>
+                    </tr>
+                    <tr>
+                        <td>JDK版本</td>
+                        <td v-text="'JDK' + server.jvmEntity.version"></td>
+                    </tr>
+                    <tr>
+                        <td>安装路径</td>
+                        <td v-text="server.jvmEntity.home"></td>
+                    </tr>
+                    <tr>
+                        <td>项目路径</td>
+                        <td v-text="server.jvmEntity.userDir"></td>
+                    </tr>
+                    <tr>
+                        <td>启动时间</td>
+                        <td v-text="server.jvmEntity.startTime"></td>
+                    </tr>
+                    <tr>
+                        <td>运行时长</td>
+                        <td v-text="server.jvmEntity.runTime"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="layui-card">
+            <div class="layui-card-header">磁盘信息</div>
+            <div class="layui-card-body">
+                <ul class="pear-card-status">
+                    <li v-for="(sysFile,index) in server.sysFileEntities">
+                        <p v-text="sysFile.typeName"></p>
+                        磁盘大小&nbsp;<span v-text="sysFile.total"></span>&nbsp;&nbsp;
+                        空闲大小&nbsp;<span v-text="sysFile.free"></span>&nbsp;&nbsp;
+                        <br/>
+                        <br/>
+                        已经使用&nbsp;<span v-text="sysFile.used"></span>&nbsp;&nbsp;
+                        使用概率&nbsp;<span v-text="sysFile.usage + '%'"></span>
+                        <br/>
+                        <a href="javascript:;" data-id="1" class="pear-btn pear-btn-xs pear-btn-primary pear-reply">详情</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/main-js"></div>
+<script type="text/javascript">
+    //注册视图组件
+    Vue.component('VeLine', VeLine);
+    var vm = new Vue({
+        el: '#webApp',
+        data: {
+            server: {
+                systemEntity: {},
+                sysFileEntities: {},
+                jvmEntity: {},
+                memEntity: {},
+                cpuEntity: {}
+            },
+            chartSettings: {
+                /* xAxisType: 'time',*/
+                area: true,
+                axisSite: { right: ['number']},
+                labelMap: {'date': '日期', 'number': '访问量'}
+            },
+            chartData: {
+                columns: ['date', 'number'],
+                rows: []
+            },
+            loading: false,
+            dataEmpty: false,
+        },
+        created: function () {
+            this.getServer();
+        },
+        methods: {
+            openFullScreen: function() {
+                this.loading = this.$loading({
+                    lock: true,
+                    text: "加载中...",
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+            },
+            getServer:function () {
+                //this.openFullScreen();
+                axios.get('/sys/server/info')
+                    .then(function (res) {
+                        //vm.loading.close();
+                        if(res.data.code === 0){
+                            vm.server = res.data.server;
+                            vm.chartData.rows = res.data.signUser;
+                        }
+                        else {
+                            vm.$message({message: res.data.msg, type: 'warning'});
+                        }
+                    }).catch(function (err) {
+                    vm.$message.error('请求失败，请稍后再试');
+                });
+            },
+            getSignUser:function () {
+                axios.get('/sys/server/info')
+                    .then(function (res) {
+                        if(res.data.code === 0){
+                            vm.server = res.data.server;
+                            vm.chartData.rows = res.data.signUserList;
+                        }
+                        else {
+                            vm.$message({
+                                message: res.data.msg,
+                                type: 'warning'
+                            });
+                        }
+                    }).catch(function (err) {
+                    vm.$message.error('请求失败，请稍后再试');
+                });
+            },
+        }
+    });
+</script>
+</body>
+</html>
